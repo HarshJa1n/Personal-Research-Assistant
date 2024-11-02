@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 
 import streamlit as st
 
-from llama_index.llms.groq import Groq
+from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 
 from crewai import Crew, Process
@@ -20,14 +20,17 @@ load_dotenv()
 
 st.title("Literature Survey Made Easy!")
 
-GROQ_API_KEY = st.text_input("Enter your GROQ API key: ", type="password")
-LLM_MODEL_NAME = os.environ.get("OPENAI_MODEL_NAME")
-EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    OPENAI_API_KEY = st.text_input("Enter your OpenAI API key: ", type="password")
 
-embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL_NAME)
-llm = Groq(model=LLM_MODEL_NAME, api_key=GROQ_API_KEY)
+LLM_MODEL_NAME = os.environ.get("OPENAI_MODEL_NAME", "gpt-4o-mini")
+EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME", "text-embedding-3-small")
 
-if GROQ_API_KEY:
+embed_model = OpenAIEmbedding(model=EMBEDDING_MODEL_NAME, api_key=OPENAI_API_KEY)
+llm = OpenAI(model=LLM_MODEL_NAME, api_key=OPENAI_API_KEY)
+
+if OPENAI_API_KEY:
     try:
         choice = st.radio("Select the task you are interested in", ["Interact with a Research Paper", "Research about a research topic"])
         if choice == "Interact with a Research Paper":
@@ -102,5 +105,5 @@ if GROQ_API_KEY:
     except Exception as e:
         st.error(f"Error: {e}")
 else:
-    if not GROQ_API_KEY:
+    if not OPENAI_API_KEY:
         st.write("Please provide your OpenAI API key")

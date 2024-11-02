@@ -2,6 +2,8 @@ import os
 import warnings
 import requests
 from dotenv import load_dotenv
+import sys
+from logger import setup_logger, TeeLogger as StreamToLogger
 
 import streamlit as st
 
@@ -88,16 +90,19 @@ if OPENAI_API_KEY:
                     arxiv_researcher_task = tasks.arxiv_researcher_task(arxiv_researcher)
                     analyst_task = tasks.analyst_task(analyst)
 
+                    log_file, logger = setup_logger()
+                    sys.stdout = StreamToLogger(log_file)
+
                     crew = Crew(
                         agents=[web_researcher, arxiv_researcher, analyst],
                         tasks=[web_researcher_task, arxiv_researcher_task, analyst_task],
                         manager_agent=manager,
                         process=Process.hierarchical,
-                        # cache=True,
-                        # memory=True,
                         verbose=True,
                     )
+                    logger.info(f"Starting research on topic: {user_input}")
                     result = crew.kickoff()
+                    logger.info("Research completed")
                     st.write("AI response: ")
                     st.write(result.raw)
                 else:
